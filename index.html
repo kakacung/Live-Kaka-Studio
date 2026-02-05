@@ -5,22 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Player</title>
     
-    <!-- Script HLS.js: Wajib agar bisa mutar video .m3u8 di Chrome/Android -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        /* Reset tampilan agar full screen hitam */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             background-color: #000;
-            overflow: hidden; /* Matikan scroll */
+            overflow: hidden;
             font-family: sans-serif;
         }
 
-        /* Wrapper Video Full Screen */
         #wrapper {
             position: fixed;
             top: 0;
@@ -31,106 +28,99 @@
             background-color: #000;
         }
 
-        /* Video Tag */
         video {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Agar video tidak terpotong (ada hitam di samping kalau rasio beda) */
+            object-fit: contain;
             border: none;
             display: block;
         }
 
-        /* --- STYLE TOMBOL DANA --- */
+        /* --- TOMBOL DANA FULL LEBAR --- */
         .dana-container {
-            position: fixed; /* Melayang di atas video */
-            bottom: 30px;    /* Jarak dari bawah */
-            left: 50%;       /* Posisi tengah */
-            transform: translateX(-50%); 
-            z-index: 9999;   /* Paling atas */
-            text-align: center;
-            width: 80%;
-            pointer-events: none; /* Supaya area transparan disekitar tombol bisa diklik (tembus pandang) */
+            position: fixed;
+            bottom: 0;       /* Nempel di bawah layar */
+            left: 0;        /* Nempel di kiri layar */
+            width: 100%;    /* FULL UJUNG KE UJUNG */
+            height: 90px;   /* Tinggi area (sesuaikan kalau mau lebih tebal untuk nutupin kontrol) */
+            z-index: 9999;
+            background-color: #118EEA; /* Warna background full biru */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); /* Bayangan di atas biar tegas */
         }
 
         .btn-dana {
-            pointer-events: auto; /* Aktifkan klik hanya pada tombolnya */
-            display: block;
-            background-color: #118EEA; /* Warna Biru Dana */
+            width: 100%;
+            height: 100%;
+            background-color: #118EEA;
             color: #fff;
             text-decoration: none;
-            padding: 15px 20px;
-            border-radius: 50px;
             font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(17, 142, 234, 0.5); 
-            border: 2px solid #fff;
-            animation: pulse 2s infinite; /* Efek berdenyut */
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-top: 2px solid #fff; /* Garis putih di atas biar ada pembatas */
+            cursor: pointer;
         }
 
-        /* Animasi Berdenyut */
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(17, 142, 234, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(17, 142, 234, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(17, 142, 234, 0); }
+        /* Animasi teks berkedip biar makin eye-catching */
+        .blink {
+            animation: blinking 1.5s infinite;
+        }
+        @keyframes blinking {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. PLAYER VIDEO (Menggunakan Link Asli Anda) -->
+    <!-- VIDEO TANPA CONTROLS (Hilangkan atribut 'controls') -->
     <div id="wrapper">
-        <video id="video" controls autoplay muted playsinline poster="https://via.placeholder.com/1920x1080/000000/FFFFFF?text=Loading+Video..."></video>
+        <video id="video" autoplay muted playsinline></video>
     </div>
 
-    <!-- 2. TOMBOL DANA -->
+    <!-- TOMBOL DANA FULL NYA -->
     <div class="dana-container">
-        <!-- GANTI LINK DANA DI BAWAH INI -->
+        <!-- GANTI LINK DANA DISINI -->
         <a href="https://link.dana.id/XXXXX" class="btn-dana">
-            DONASI VIA DANA
+            <span class="blink">DONASI VIA DANA (KLIK DISINI)</span>
         </a>
     </div>
 
     <script>
       var video = document.getElementById('video');
-      
-      // --- LINK VIDEO ASLI (SUDAH DIMASUKKAN) ---
       var videoSrc = 'https://cdnjav.golgemez.com/hls/68cb092f0e834/playlist.m3u8';
-      // -----------------------------------------
 
       if (Hls.isSupported()) {
         var hls = new Hls();
         hls.loadSource(videoSrc);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          video.play().catch(function(error) {
-            console.log("Autoplay dicegah browser, perlu interaksi user.");
-          });
-        });
-        hls.on(Hls.Events.ERROR, function (event, data) {
-          if (data.fatal) {
-             switch (data.type) {
-               case Hls.ErrorTypes.NETWORK_ERROR:
-                 console.log("fatal network error encountered, try to recover");
-                 hls.startLoad();
-                 break;
-               case Hls.ErrorTypes.MEDIA_ERROR:
-                 console.log("fatal media error encountered, try to recover");
-                 hls.recoverMediaError();
-                 break;
-               default:
-                 hls.destroy();
-                 break;
-             }
-          }
+          video.play().catch(e => console.log("Autoplay butuh interaksi"));
         });
       }
-      // Fallback untuk Safari (iPhone/iPad) yang sudah support native HLS
       else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoSrc;
         video.addEventListener('loadedmetadata', function() {
           video.play();
         });
       }
+
+      // Fitur Tambahan: Klik di area video (di atas tombol dana) untuk Pause/Play
+      // Karena kontrol video sudah dihilangkan
+      document.querySelector('video').addEventListener('click', function(){
+          if (this.paused) {
+              this.play();
+          } else {
+              this.pause();
+          }
+      });
     </script>
 
 </body>
